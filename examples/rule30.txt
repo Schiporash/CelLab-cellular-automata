@@ -1,0 +1,5 @@
+# Wolfram's Rule 30 (one-dimensional, two states)
+The world is a 1x61 grid.
+Cells can be OFF or ON.
+The rule is rule 30.
+Run for 30 generations.

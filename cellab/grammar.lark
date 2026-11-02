@@ -1,0 +1,78 @@
+// Grammar for one (already normalised, lower-case) sentence of an
+// automaton description. See normalize.py for the synonyms that are
+// rewritten before parsing.
+
+?start: world
+      | states
+      | neighbourhood
+      | border
+      | rule
+      | elementary
+      | pattern
+      | seed
+      | generations
+      | initial
+
+_art: "a" | "an"
+
+// "The world is a 5 by 5 grid."   ("5x5" is rewritten to "5 by 5")
+world: "the"? ("world" | "grid") "is" _art? INT "by" INT ("grid" | "cells")?
+
+// "Cells can be TREE, FIRE or EMPTY."
+states: ("cells" "can" "be" | "the" "states" "are" | "states" "are") name_list
+name_list: NAME ("," NAME)* (","? ("or" | "and") NAME)?
+
+// "Each cell has 4 neighbours." / "The neighbourhood is von neumann."
+neighbourhood: ("each" "cell" "has" | "cells" "have") INT "neighbours"
+             | "the" "neighbourhood" "is" NBH_KIND
+NBH_KIND: "moore" | "vonneumann"
+
+// "The border is fixed." / "The grid wraps around."
+border: "the"? ("border" | "borders" | "edge" | "edges" | "grid" | "world") ("is" | "are")? BORDER_KIND
+BORDER_KIND: "fixed" | "wrap"
+
+// "A TREE cell becomes FIRE if at least 1 neighbour is FIRE."
+rule: _art NAME "cell" action modifier*
+action: "becomes" NAME          -> becomes
+      | "stays" NAME?           -> stays
+      | "stays" "the" "same"    -> stays
+
+?modifier: probability | condition
+
+probability: "with" "probability" DECIMAL      -> prob_decimal
+           | "with" "probability" INT          -> prob_decimal
+           | "with" "probability" INT "%"      -> prob_percent
+           | "with" INT "%" "probability"      -> prob_percent
+
+condition: "if" count _nb ("is" | "are") NAME
+         | "if" "no" _nb ("is" | "are") NAME    -> cond_none
+         | "if" "any" _nb ("is" | "are") NAME   -> cond_any
+_nb: "neighbour" | "neighbours"
+
+count: "at" "least" INT                -> ge
+     | "at" "most" INT                 -> le
+     | "exactly" INT                   -> eq
+     | INT                             -> eq
+     | "more" "than" INT               -> gt
+     | "fewer" "than" INT              -> lt
+     | INT ("," INT)* ","? "or" INT    -> one_of
+     | "between" INT "and" INT         -> between
+
+// "The rule is rule 30." / "Use rule 30."   (elementary 1D automata)
+elementary: ("the" "rule" "is" | "use") "wolfram"? "rule" INT
+
+// "Pattern 110 becomes 1."   (one line of the 8-case rule table)
+pattern: "pattern" INT "becomes" INT
+
+// Experiment parameters
+seed: ("the" "random"? "seed" "is" | "use" "seed") INT
+generations: ("run" "for" | "simulate") INT ("generations" | "steps")
+initial: "initially" percent_state ("," percent_state)* (","? "and" percent_state)?
+percent_state: INT "%" ("of" "cells")? ("is" | "are")? NAME
+
+NAME: /[a-z_][a-z0-9_]*/
+
+%import common.INT
+%import common.DECIMAL
+%import common.WS
+%ignore WS

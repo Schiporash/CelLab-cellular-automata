@@ -1,0 +1,4 @@
+# Rule 30 given as the full 8-case table
+The world is a 1x61 grid.
+Pattern 111 becomes 0. Pattern 110 becomes 0. Pattern 101 becomes 0. Pattern 100 becomes 1.
+Pattern 011 becomes 1. Pattern 010 becomes 1. Pattern 001 becomes 1. Pattern 000 becomes 0.

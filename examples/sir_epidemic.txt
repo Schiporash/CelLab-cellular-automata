@@ -1,0 +1,9 @@
+# S-I-R epidemic model (probabilistic)
+The world is a 40x40 grid.
+Cells can be SUSCEPTIBLE, INFECTED or RECOVERED.
+A SUSCEPTIBLE cell becomes INFECTED with probability 0.3 if at least 1 neighbour is INFECTED.
+An INFECTED cell becomes RECOVERED with probability 10%.
+A RECOVERED cell remains RECOVERED.
+Initially 2% of cells are INFECTED and 98% are SUSCEPTIBLE.
+The seed is 7.
+Simulate 200 steps.

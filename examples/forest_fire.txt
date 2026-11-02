@@ -1,0 +1,5 @@
+# Forest Fire (deterministic variant) - the example from Deliverable 1
+The world is a 5x5 grid. Cells can be TREE, FIRE or EMPTY.
+A FIRE cell becomes EMPTY.
+A TREE cell becomes FIRE if at least 1 neighbour is FIRE.
+An EMPTY cell stays EMPTY.

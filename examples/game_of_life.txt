@@ -1,0 +1,11 @@
+# Conway's Game of Life
+The world is a 20x20 grid.
+The grid wraps around.
+Cells can be ALIVE or DEAD.
+An ALIVE cell becomes DEAD if fewer than 2 neighbours are ALIVE.
+An ALIVE cell becomes DEAD if more than 3 neighbours are ALIVE.
+An ALIVE cell stays ALIVE if 2 or 3 neighbours are ALIVE.
+A DEAD cell becomes ALIVE if exactly 3 neighbours are ALIVE.
+Initially 30% of cells are ALIVE.
+Run for 100 generations.
+The seed is 42.

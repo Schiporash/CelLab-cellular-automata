@@ -1,0 +1,9 @@
+# Cyclic Cellular Automaton with 4 states (von Neumann neighbourhood)
+The world is a 30x30 grid. The border is toroidal.
+Each cell has 4 neighbors.
+Cells can be S0, S1, S2 or S3.
+A S0 cell turns into S1 if at least one neighbor is S1.
+A S1 cell turns into S2 if at least one neighbor is S2.
+A S2 cell turns into S3 if at least one neighbor is S3.
+A S3 cell turns into S0 if at least one neighbor is S0.
+Initially 25% of cells are S0, 25% are S1, 25% are S2 and 25% are S3.
