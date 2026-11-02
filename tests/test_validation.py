@@ -41,13 +41,13 @@ def test_duplicate_state():
 
 
 def test_undeclared_state_in_rule():
-    assert_problem(BASE + "A D cell becomes A.", "D, which was not declared")
-    assert_problem(BASE + "A A cell becomes D.", "D, which was not declared")
-    assert_problem(BASE + "A A cell becomes B if any neighbour is D.", "D, which was not declared")
+    assert_problem(BASE + "A D cell becomes A.", "state D is used")
+    assert_problem(BASE + "A A cell becomes D.", "state D is used")
+    assert_problem(BASE + "A A cell becomes B if any neighbour is D.", "state D is used")
 
 
 def test_undeclared_state_in_initial():
-    assert_problem(BASE + "Initially 10% of cells are D.", "D, which was not declared")
+    assert_problem(BASE + "Initially 10% of cells are D.", "state D is used")
 
 
 def test_too_many_neighbours_requested():
@@ -133,8 +133,19 @@ def test_validate_plain_json_model():
     model = json.loads('{"rows": 5, "cols": 5, "states": ["X", "Y"],'
                        ' "rules": [{"state": "X", "next": "Z", "if": ["Y", "??", 1]}]}')
     found = [p.message for p in validate(model)]
-    assert any("Z, which was not declared" in m for m in found)
+    assert any("state Z is used" in m for m in found)
     assert any("malformed condition" in m for m in found)
+
+
+def test_missing_states_gives_one_message_with_a_suggestion():
+    found = messages("The world is a 5x5 grid. A TREE cell becomes FIRE if at least 2 neighbours are FIRE. "
+                     "A FIRE cell becomes EMPTY. Initially 70% of cells are TREE.")
+    assert found == ["the cell states are missing, add a sentence like 'Cells can be TREE, FIRE, EMPTY.'"]
+
+
+def test_undeclared_state_reported_once():
+    found = messages(BASE + "A A cell becomes D if any neighbour is D. A D cell becomes A. Initially 5% of cells are D.")
+    assert found == ["state D is used in rule 'A -> D if D >= 1' but was not declared"]
 
 
 def test_load_description_raises_with_all_problems():

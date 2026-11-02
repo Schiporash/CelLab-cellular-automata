@@ -46,7 +46,6 @@ def validate(model: dict) -> list[Problem]:
     # --- states ----------------------------------------------------------
     states = model.get("states")
     if not states:
-        err("the cell states are missing (e.g. 'Cells can be ALIVE or DEAD.')")
         states = []
     else:
         if len(states) < 2:
@@ -57,10 +56,11 @@ def validate(model: dict) -> list[Problem]:
             if not isinstance(s, str) or not s.replace("_", "").isalnum() or s.lower() in RESERVED:
                 err(f"'{s}' cannot be used as a state name")
     declared = set(states)
+    undeclared: dict[str, str] = {}  # state -> where it is first used
 
     def check_state(name, where):
         if name not in declared:
-            err(f"{where} uses state {name}, which was not declared")
+            undeclared.setdefault(name, where)
 
     # --- rules -----------------------------------------------------------
     rules = model.get("rules", [])
@@ -101,6 +101,14 @@ def validate(model: dict) -> list[Problem]:
             err(f"the percentage for {state} must be between 0 and 100")
     if sum(p for p in initial.values() if isinstance(p, (int, float))) > 100:
         err("the initial percentages add up to more than 100%")
+
+    # one message per missing state, not one for every place it appears
+    if not states:
+        used = ", ".join(undeclared) or "ALIVE or DEAD"
+        problems.insert(0, f"the cell states are missing, add a sentence like 'Cells can be {used}.'")
+    else:
+        for name, where in undeclared.items():
+            err(f"state {name} is used in {where} but was not declared")
 
     return [Problem(p) for p in problems]
 
