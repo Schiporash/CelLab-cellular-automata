@@ -18,8 +18,9 @@ _art: "a" | "an"
 // "The world is a 5 by 5 grid."   ("5x5" is rewritten to "5 by 5")
 world: "the"? ("world" | "grid") "is" _art? INT "by" INT ("grid" | "cells")?
 
-// "Cells can be TREE, FIRE or EMPTY."
-states: ("cells" "can" "be" | "the" "states" "are" | "states" "are") name_list
+// "Cells can be TREE, FIRE or EMPTY." / "A cell can be ..." / "The possible states are ..."
+states: (_cell_subject "can" "be" | "the" "possible"? "states" "are" | "possible"? "states" "are") name_list
+_cell_subject: "cells" | "each" "cell" | "every" "cell" | "a" "cell"
 name_list: NAME ("," NAME)* (","? ("or" | "and") NAME)?
 
 // "Each cell has 4 neighbours." / "The neighbourhood is von neumann."

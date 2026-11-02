@@ -80,7 +80,19 @@ def test_case_insensitive_and_lowercase_states():
     assert model["rules"][0]["state"] == "DEAD"
 
 
-@pytest.mark.parametrize("size", ["5x7", "5 x 7", "5×7", "5 by 7"])
+@pytest.mark.parametrize("sentence", [
+    "Cells can be TREE, FIRE or EMPTY.",
+    "A cell can be TREE, FIRE or EMPTY.",
+    "Each cell can be TREE, FIRE or EMPTY.",
+    "Every cell can be TREE, FIRE, or EMPTY.",
+    "The states are TREE, FIRE and EMPTY.",
+    "The possible states are TREE, FIRE and EMPTY.",
+])
+def test_states_spellings(sentence):
+    assert parse("The world is a 3x3 grid. " + sentence)["states"] == ["TREE", "FIRE", "EMPTY"]
+
+
+@pytest.mark.parametrize("size",["5x7", "5 x 7", "5×7", "5 by 7"])
 def test_world_size_spellings(size):
     model = parse(f"The world is a {size} grid. Cells can be A or B.")
     assert (model["rows"], model["cols"]) == (5, 7)
