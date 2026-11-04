@@ -28,3 +28,7 @@ class DescriptionError(CelLabError):
 
 class ValidationError(CelLabError):
     """The description was parsed, but the model it describes is not valid."""
+
+
+class StorageError(CelLabError):
+    """A saved model or simulation could not be read back."""
