@@ -21,8 +21,8 @@ Trebuie să meargă pe cel puțin 2-3 automate. Noi le avem pregătite pe toate 
 | Cine | Partea lui | Stare |
 |---|---|---|
 | Andrei | parserul și validarea | gata |
-| Tudor | simularea: pasul de la o generație la alta (cu `convolve2d` pentru vecini), Rule 30, regulile cu probabilitate (cu seed), mai târziu întrebările și rețeaua neuronală | de făcut |
-| Anca | salvarea și încărcarea: modelul în JSON, generațiile în `.npz` (toate sau doar ultima), reluarea unei simulări salvate; mai târziu interfața în PySide6 | de făcut |
+| Tudor | simularea: pasul de la o generație la alta (cu `convolve2d` pentru vecini), Rule 30, regulile cu probabilitate (cu seed); mai târziu întrebările și rețeaua neuronală | simularea gata |
+| Anca | salvarea și încărcarea: modelul în JSON, generațiile în `.npz` (toate sau doar ultima), reluarea unei simulări salvate; mai târziu interfața în PySide6 | salvarea gata |
 
 ## Ce e gata
 
@@ -38,6 +38,15 @@ Trebuie să meargă pe cel puțin 2-3 automate. Noi le avem pregătite pe toate 
 
 Pot fi validate și modelele citite dintr-un JSON salvat, nu doar cele obținute din text.
 
+**Simularea** (`cellab/simulation.py`):
+- grila e un array NumPy cu indexul stării fiecărei celule (0 = prima stare declarată);
+- vecinii se numără pentru toată grila odată cu `convolve2d` (8 sau 4 vecini); la marginea `fixed` celulele din afara grilei nu contează ca vecini, la `wrap` grila se continuă pe partea cealaltă;
+- starea inițială: dacă sunt date procente, fiecare stare primește atâtea celule (rotunjit, minim una dacă procentul nu e 0), puse aleator; restul celulelor primesc prima stare declarată care nu are procent (la Game of Life: DEAD). Dacă nu e dat niciun procent, toată grila e în prima stare și celula din mijloc în a doua (un singur foc în pădure, o singură celulă ON la Rule 30), ca în Livrabilul 1;
+- regulile cu probabilitate folosesc un singur număr aleator per celulă și generație, dintr-un generator pornit cu `seed`, deci același model cu același seed dă mereu aceeași simulare;
+- Rule 30 (și orice regulă elementară dată prin tabel) se calculează din tabelul cu 8 cazuri; la marginea `fixed` celulele din afară sunt în starea 0.
+
+**Salvarea și reluarea** (`cellab/storage.py`): o simulare se salvează în două fișiere, `nume.json` (modelul, generația curentă, ce generații s-au păstrat și starea generatorului aleator) și `nume.npz` (generațiile, toate sau doar ultima). La încărcare modelul e validat din nou și se verifică dacă generațiile se potrivesc cu el. Pentru că se salvează și starea generatorului, o simulare reluată continuă exact ca și cum nu s-ar fi oprit (inclusiv la S-I-R, care e cu probabilități).
+
 ## Rulare
 
 ```bash
@@ -45,19 +54,35 @@ pip install -r requirements.txt
 python -m pytest
 python -m cellab examples/forest_fire.txt              # afișează modelul
 python -m cellab examples/game_of_life.txt -o gol.json # îl salvează
+python -m cellab examples/rule30.txt --run             # simulează (nr. de generații din descriere)
+python -m cellab examples/sir_epidemic.txt --run 50 --save sir   # sir.json + sir.npz
+python -m cellab --resume sir --run 150                # continuă de la generația 50
+python -m cellab examples/cyclic.txt --run 500 --save cyc --keep last   # doar ultima generație
 ```
 
 Din cod:
 
 ```python
-from cellab import load_description, validate, CelLabError
+from cellab import load_description, CelLabError, Simulation, save_simulation, load_simulation
 
 try:
     model = load_description(text)   # parsare + validare
 except CelLabError as err:
     for p in err.problems:
         print(p)
+
+sim = Simulation(model)        # generația 0
+sim.run(50)                    # încă 50 de generații (fără argument: cât scrie în descriere)
+sim.grid, sim.generation       # unde a ajuns
+sim.history                    # toate generațiile de până acum
+sim.counts()                   # {"ALIVE": 37, "DEAD": 363}
+print(sim.render())            # grila ca text
+
+save_simulation(sim, "gol", keep="all")   # sau keep="last"
+sim = load_simulation("gol")              # se poate continua cu sim.run(...)
 ```
+
+Funcțiile separate, dacă e nevoie de ele (ex. pentru întrebări sau pentru setul de date al rețelei): `initial_grid(model)`, `step(grid, model, rng)` și `neighbour_counts(grid, stare, vecini, margine)`.
 
 ## Exemplu de descriere
 
@@ -100,8 +125,8 @@ Ce trebuie știut când scriem simularea:
 ## Structura
 
 ```
-cellab/      parser, gramatică, validare
+cellab/      parser, gramatică, validare, simulare, salvare
 examples/    descrierile celor 5 automate
-tests/       teste pentru parser și validare
+tests/       teste pentru parser, validare, simulare și salvare
 docs/        Livrabilul 1
 ```
