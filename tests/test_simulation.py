@@ -245,3 +245,8 @@ def test_every_example_runs(name):
     sim = Simulation(example(name))
     sim.run(20)
     assert sum(sim.counts().values()) == sim.model["rows"] * sim.model["cols"]
+
+
+@pytest.mark.parametrize("name", ["game_of_life", "cyclic", "sir_epidemic"])
+def test_examples_with_a_random_start_repeat(name):
+    assert (Simulation(example(name)).grid == Simulation(example(name)).grid).all()

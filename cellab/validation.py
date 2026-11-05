@@ -8,13 +8,16 @@ All problems are collected and reported together. Checked:
   * probabilities are in (0, 1], percentages add up to at most 100;
   * no two rules contradict each other (same cell state, a neighbourhood
     where both apply, different results);
+  * the random rules that can hold for the same cell at the same time have
+    probabilities that add up to at most 1;
   * elementary automata (Rule 30 etc.) have one row, two states and a
     complete 8-case table.
 A cell for which no rule applies keeps its state, so rules do not have to
 cover every case.
 """
 
-from itertools import combinations
+from collections import Counter
+from itertools import combinations, combinations_with_replacement
 
 from .errors import Problem, ValidationError
 
@@ -83,7 +86,7 @@ def validate(model: dict) -> list[Problem]:
                 err(f"rule '{text}' can never apply: a cell has only {neighbours} neighbours")
 
     if not problems:
-        problems.extend(_conflicts(rules, neighbours))
+        problems.extend(_conflicts(rules, neighbours) or _too_much_probability(rules, neighbours, states))
 
     # --- elementary automata ---------------------------------------------
     if "table" in model or "wolfram" in model:
@@ -156,6 +159,28 @@ def _conflicts(rules: list[dict], neighbours: int) -> list[str]:
         if p1 is not None and p2 is not None and p1 + p2 <= 1:
             continue  # two random outcomes that fit in the same draw
         found.append(f"rules '{describe_rule(r1)}' and '{describe_rule(r2)}' contradict each other")
+    return found
+
+
+def _too_much_probability(rules: list[dict], neighbours: int, states: list) -> list[str]:
+    """Random rules for one state share a single draw, so the ones that hold
+    together cannot need more than 1. Tries every neighbourhood a cell can have."""
+    found = []
+    for state in dict.fromkeys(r["state"] for r in rules if "prob" in r):
+        group = [r for r in rules if r["state"] == state and "prob" in r]
+        kinds = sorted({r["if"][0] for r in group if "if" in r})
+        # None = a neighbour in a state that no condition asks about
+        names = kinds if set(kinds) >= set(states) else [*kinds, None]
+        worst, total = [], 0
+        for around in combinations_with_replacement(names, neighbours):
+            counts = Counter(around)
+            holding = [r for r in group
+                       if "if" not in r or counts[r["if"][0]] in satisfying_counts(r["if"], neighbours)]
+            if sum(r["prob"] for r in holding) > total:
+                worst, total = holding, sum(r["prob"] for r in holding)
+        if total > 1 + 1e-9:
+            listed = ", ".join(f"'{describe_rule(r)}'" for r in worst)
+            found.append(f"the probabilities of the rules for {state} add up to {total:g}, more than 1: {listed}")
     return found
 
 

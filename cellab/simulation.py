@@ -18,6 +18,8 @@ model["states"]), so grid == 0 marks the cells in the first declared state.
 import numpy as np
 from scipy.signal import convolve2d
 
+from .errors import Problem, StorageError
+
 DEFAULT_GENERATIONS = 100
 
 KERNELS = {
@@ -175,6 +177,19 @@ class Simulation:
             self.step()
         return self.grid
 
+    def rewind(self, generation: int) -> np.ndarray:
+        """Go back to a kept generation and forget the ones after it. The random
+        generator is not rewound, so with probabilistic rules the simulation
+        continues differently from the first time."""
+        kept = self.first_generation + len(self.history) - 1
+        if not self.first_generation <= generation <= kept:
+            raise StorageError([Problem(f"generation {generation} was not kept, "
+                                        f"this simulation has generations {self.first_generation}..{kept}")])
+        self.history = self.history[:generation - self.first_generation + 1]
+        self.grid = self.history[-1]
+        self.generation = generation
+        return self.grid
+
     def counts(self) -> dict[str, int]:
         """How many cells are in each state now."""
         found = np.bincount(self.grid.ravel(), minlength=len(self.model["states"]))
@@ -184,13 +199,17 @@ class Simulation:
         return render(self.grid, self.model["states"])
 
 
-def render(grid: np.ndarray, states: list[str]) -> str:
-    """The grid as text, one character per cell: '.'/'#' for two states,
-    otherwise the first letter of each state (or its index if those clash)."""
+def state_chars(states: list[str]) -> list[str]:
+    """The character of each state when a grid is written as text: '.'/'#' for
+    two states, otherwise the first letter (or the index if those clash)."""
     if len(states) == 2:
-        chars = ".#"
-    elif len({s[0] for s in states}) == len(states):
-        chars = [s[0] for s in states]
-    else:
-        chars = [str(i) if i < 10 else chr(ord("a") + i - 10) for i in range(len(states))]
+        return [".", "#"]
+    if len({s[0] for s in states}) == len(states):
+        return [s[0] for s in states]
+    return [str(i) if i < 10 else chr(ord("a") + i - 10) for i in range(len(states))]
+
+
+def render(grid: np.ndarray, states: list[str]) -> str:
+    """The grid as text, one character per cell (see state_chars)."""
+    chars = state_chars(states)
     return "\n".join("".join(chars[v] for v in row) for row in grid)

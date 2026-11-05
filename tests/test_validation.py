@@ -108,6 +108,39 @@ def test_probabilistic_outcomes_that_fit_together():
                           "A A cell becomes C with probability 0.5.", "contradict")
 
 
+def test_three_random_rules_that_add_up_to_more_than_one():
+    # every pair fits (0.5 + 0.5), but the third rule would never get a turn
+    assert_problem("The world is a 5x5 grid. Cells can be A, B, C or D. "
+                   "A A cell becomes B with probability 0.5. "
+                   "A A cell becomes C with probability 0.5. "
+                   "A A cell becomes D with probability 0.5.", "more than 1")
+
+
+def test_random_rules_with_the_same_result_also_count():
+    assert_problem(BASE + "A A cell becomes B with probability 0.6. "
+                          "A A cell becomes B with probability 0.6.", "more than 1")
+
+
+def test_random_rules_that_exclude_each_other_can_add_up_to_more():
+    assert messages(BASE + "A A cell becomes B with probability 0.6 if exactly 1 neighbour is C. "
+                           "A A cell becomes C with probability 0.6 if exactly 2 neighbours are C. "
+                           "A A cell becomes B with probability 0.6 if exactly 3 neighbours are C.") == []
+
+
+def test_random_rules_that_cannot_all_hold_at_once():
+    # 3 + 3 neighbours fit around a cell, 3 + 3 + 3 do not, so at most 0.5 + 0.4 applies
+    assert messages(BASE + "A A cell becomes B with probability 0.5 if at least 3 neighbours are A. "
+                           "A A cell becomes C with probability 0.4 if at least 3 neighbours are B. "
+                           "A A cell becomes B with probability 0.3 if at least 3 neighbours are C.") == []
+
+
+def test_random_rules_that_add_up_to_exactly_one():
+    assert messages("The world is a 5x5 grid. Cells can be A, B, C or D. "
+                    "A A cell becomes B with probability 0.05. "
+                    "A A cell becomes C with probability 0.15. "
+                    "A A cell becomes D with probability 0.8.") == []
+
+
 # --- elementary automata ---------------------------------------------------
 
 def test_elementary_needs_one_row():

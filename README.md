@@ -34,6 +34,7 @@ Trebuie să meargă pe cel puțin 2-3 automate. Noi le avem pregătite pe toate 
 - nicio regulă nu cere mai mulți vecini decât există (ex. `at least 9` la 8 vecini);
 - nu există două reguli care se contrazic (aceeași stare, condiții care pot fi adevărate simultan, rezultat diferit);
 - probabilitățile sunt între 0 și 1, iar procentele inițiale nu trec de 100;
+- regulile cu probabilitate care pot fi valabile în același timp pentru o celulă nu au suma probabilităților mai mare de 1;
 - la Rule 30: o singură linie, 2 stări și tabelul complet cu 8 cazuri.
 
 Pot fi validate și modelele citite dintr-un JSON salvat, nu doar cele obținute din text.
@@ -57,13 +58,21 @@ python -m cellab examples/game_of_life.txt -o gol.json # îl salvează
 python -m cellab examples/rule30.txt --run             # simulează (nr. de generații din descriere)
 python -m cellab examples/sir_epidemic.txt --run 50 --save sir   # sir.json + sir.npz
 python -m cellab --resume sir --run 150                # continuă de la generația 50
+python -m cellab --resume sir --from 20 --run 30       # se întoarce la generația 20 și continuă de acolo
 python -m cellab examples/cyclic.txt --run 500 --save cyc --keep last   # doar ultima generație
+python -m cellab examples/forest_fire.txt --grid examples/forest_fire_l1.grid --run 4   # pornește de la grila din fișier
+python -m cellab examples/forest_fire.txt --grid examples/forest_fire_l1.grid --run 4 --show   # afișează fiecare generație
+python -m cellab --run 3 --show                        # scrii descrierea în terminal, un rând gol la final
 ```
+
+`--from` merge doar cu generațiile păstrate, deci nu și după `--keep last`, iar fișierele salvate nu se schimbă decât dacă folosești `--save` cu același nume. La automatele fără probabilități ajungi din nou la aceleași generații. La cele cu probabilități (S-I-R) simularea o ia pe alt drum, pentru că generatorul aleator e salvat doar pentru ultima generație, nu pentru fiecare.
+
+Fișierul pentru `--grid` are câte o linie pentru fiecare rând și un caracter pentru fiecare celulă: prima literă a stării (`T`, `F`, `E`) sau exact ce afișează programul, deci `.` și `#` la automatele cu două stări și cifre dacă stările încep cu aceeași literă (`S0`, `S1` etc.). Atenție: `#` e a doua stare declarată, iar la Game of Life aia e `DEAD`, așa că acolo e mai clar cu `A` și `D`. `examples/forest_fire_l1.grid` e pornirea din figura din Livrabilul 1.
 
 Din cod:
 
 ```python
-from cellab import load_description, CelLabError, Simulation, save_simulation, load_simulation
+from cellab import load_description, CelLabError, Simulation, load_grid, save_simulation, load_simulation
 
 try:
     model = load_description(text)   # parsare + validare
@@ -72,6 +81,7 @@ except CelLabError as err:
         print(p)
 
 sim = Simulation(model)        # generația 0
+# sau de la o grilă din fișier: Simulation(model, grid=load_grid("start.grid", model))
 sim.run(50)                    # încă 50 de generații (fără argument: cât scrie în descriere)
 sim.grid, sim.generation       # unde a ajuns
 sim.history                    # toate generațiile de până acum

@@ -3,7 +3,7 @@
 from .errors import CelLabError, DescriptionError, Problem, StorageError, ValidationError
 from .parser import parse_description, wolfram_table
 from .simulation import Simulation, initial_grid, neighbour_counts, render, step
-from .storage import load_model, load_simulation, save_model, save_simulation
+from .storage import load_grid, load_model, load_simulation, save_model, save_simulation
 from .validation import satisfying_counts, validate, validate_or_raise
 
 
@@ -15,7 +15,7 @@ def load_description(text: str) -> dict:
 
 __all__ = [
     "CelLabError", "DescriptionError", "Problem", "StorageError", "ValidationError",
-    "Simulation", "initial_grid", "load_description", "load_model", "load_simulation",
+    "Simulation", "initial_grid", "load_description", "load_grid", "load_model", "load_simulation",
     "neighbour_counts", "parse_description", "render", "satisfying_counts",
     "save_model", "save_simulation", "step", "validate", "validate_or_raise",
     "wolfram_table",

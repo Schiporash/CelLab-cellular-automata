@@ -7,3 +7,4 @@ A S1 cell turns into S2 if at least one neighbor is S2.
 A S2 cell turns into S3 if at least one neighbor is S3.
 A S3 cell turns into S0 if at least one neighbor is S0.
 Initially 25% of cells are S0, 25% are S1, 25% are S2 and 25% are S3.
+The seed is 42.
